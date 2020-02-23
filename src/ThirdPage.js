@@ -1,12 +1,70 @@
-import React, { Component } from "react";
-import { View, Image, StyleSheet } from "react-native";
+import React, { Component, useState } from "react";
+import { View, Image, StyleSheet, FlatList, Text } from "react-native";
 import Images from "../assets/Files";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp
 } from "react-native-responsive-screen";
 
+const ProductCart = ({ id, ProductName, ProductPrice }) => {
+  const [change, setChange] = useState(false);
+  return (
+    <View
+      style={{
+        marginLeft: 10,
+        width: wp("95%"),
+        height: hp("10%"),
+        borderWidth: 2,
+        borderColor: "green",
+        marginBottom: 10,
+        backgroundColor: change ? "rgba(0, 177, 106, 0.8)" : "white"
+      }}
+      onTouchEnd={() => {
+        setChange(!change);
+      }}
+    >
+      <View
+        style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "stretch" }}
+      >
+        <Text>P_ID : {id}</Text>
+        <Text>P_Name :{ProductName}</Text>
+
+        <View style={{ margin: 3 }}>
+          <Text style={{ fontSize: 15, fontWeight: "bold", borderWidth: 1, borderColor: "black" }}>
+            QUANTITY :{5}
+          </Text>
+        </View>
+      </View>
+      <View style={{ justifyContent: "center", alignItems: "center", marginTop: 5 }}>
+        <Text
+          style={{ textAlign: "center", fontWeight: "bold", borderWidth: 1, borderColor: "black" }}
+        >
+          Serial No:{12 + "-" + 12 + "-" + 12 + "-" + 12}
+        </Text>
+      </View>
+    </View>
+  );
+};
 class ThirdPage extends Component {
+  constructor(props) {
+    super(props);
+    //getParams from LoginScreen
+    const { state } = this.props.navigation;
+
+    this.state = {
+      userName: state.params.userName,
+      userPassword: state.params.userPassword,
+      Data: [
+        { id: 1, ProductName: "Alpha", Price: 200 },
+        { id: 2, ProductName: "beta", Price: 200 },
+        { id: 3, ProductName: "Gamma", Price: 200 },
+        { id: 4, ProductName: "tera", Price: 200 },
+        { id: 5, ProductName: "GomolOKo", Price: 200 },
+        { id: 6, ProductName: "Pappi", Price: 200 }
+      ]
+    };
+  }
+
   render() {
     return (
       <View style={styles.Main}>
@@ -20,14 +78,29 @@ class ThirdPage extends Component {
         {/*AddProduct Block*/}
         <View
           style={styles.View2}
-          onTouchStart={() => this.props.navigation.navigate("FourthPage")}
+          onTouchStart={() =>
+            this.props.navigation.navigate("FourthPage", {
+              userName: this.state.userName,
+              userPassword: this.state.userPassword
+            })
+          }
         >
           <Image
             source={Images.AddProduct}
             style={{ width: wp("100%"), height: hp("15%"), resizeMode: "contain" }}
           />
         </View>
-        <View style={styles.View3}></View>
+        {/* Add Products from AllProducts Page*/}
+        <View style={styles.View3}>
+          <FlatList
+            data={this.state.Data}
+            renderItem={({ item }) => (
+              <ProductCart id={item.id} ProductName={item.ProductName} ProductPrice={item.Price} />
+            )}
+            keyExtractor={item => item.id.toString()}
+          />
+        </View>
+
         <View style={styles.View4}>
           <Image
             source={Images.AddDiscount}
