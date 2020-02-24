@@ -1,12 +1,15 @@
 import React, { Component, useState } from "react";
-import { View, Image, StyleSheet, FlatList, Text } from "react-native";
+import { View, Image, StyleSheet, Text, Button, Alert } from "react-native";
 import Images from "../assets/Files";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp
 } from "react-native-responsive-screen";
+import { TextInput } from "react-native-gesture-handler";
 
-const ProductCart = ({ id, ProductName, ProductPrice }) => {
+import base64 from "base-64";
+
+const ProductCart = ({ Product_id, ProductName, ProductSerialNumber, Quantity }) => {
   const [change, setChange] = useState(false);
   return (
     <View
@@ -26,12 +29,12 @@ const ProductCart = ({ id, ProductName, ProductPrice }) => {
       <View
         style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "stretch" }}
       >
-        <Text>P_ID : {id}</Text>
+        <Text>P_ID : {Product_id}</Text>
         <Text>P_Name :{ProductName}</Text>
 
         <View style={{ margin: 3 }}>
           <Text style={{ fontSize: 15, fontWeight: "bold", borderWidth: 1, borderColor: "black" }}>
-            QUANTITY :{5}
+            QUANTITY : {Quantity}
           </Text>
         </View>
       </View>
@@ -39,33 +42,33 @@ const ProductCart = ({ id, ProductName, ProductPrice }) => {
         <Text
           style={{ textAlign: "center", fontWeight: "bold", borderWidth: 1, borderColor: "black" }}
         >
-          Serial No:{12 + "-" + 12 + "-" + 12 + "-" + 12}
+          Serial No:{ProductSerialNumber}
         </Text>
       </View>
     </View>
   );
 };
+
 class ThirdPage extends Component {
-  constructor(props) {
-    super(props);
-    //getParams from LoginScreen
-    const { state } = this.props.navigation;
-
-    this.state = {
-      userName: state.params.userName,
-      userPassword: state.params.userPassword,
-      Data: [
-        { id: 1, ProductName: "Alpha", Price: 200 },
-        { id: 2, ProductName: "beta", Price: 200 },
-        { id: 3, ProductName: "Gamma", Price: 200 },
-        { id: 4, ProductName: "tera", Price: 200 },
-        { id: 5, ProductName: "GomolOKo", Price: 200 },
-        { id: 6, ProductName: "Pappi", Price: 200 }
-      ]
-    };
-  }
-
+  state = {
+    change: false,
+    value: "1"
+  };
   render() {
+    const { state } = this.props.navigation;
+    const userName = state.params.userName;
+    const userPassword = state.params.userPassword;
+    const product_id = state.params.id;
+    const product_name = state.params.name;
+    const sellingPrice = state.params.sellingPrice;
+    const serialNumber = state.params.serialNumber;
+    const object = {
+      product_Id: product_id,
+      product_Name: product_name,
+      selling_Price: sellingPrice,
+      serial_Number: serialNumber,
+      Quantity: serialNumber ? 1 : 0
+    };
     return (
       <View style={styles.Main}>
         {/*Header Block */}
@@ -78,12 +81,13 @@ class ThirdPage extends Component {
         {/*AddProduct Block*/}
         <View
           style={styles.View2}
-          onTouchStart={() =>
+          onTouchStart={() => {
+            this.setState({ change: true });
             this.props.navigation.navigate("FourthPage", {
-              userName: this.state.userName,
-              userPassword: this.state.userPassword
-            })
-          }
+              userName: userName,
+              userPassword: userPassword
+            });
+          }}
         >
           <Image
             source={Images.AddProduct}
@@ -92,13 +96,61 @@ class ThirdPage extends Component {
         </View>
         {/* Add Products from AllProducts Page*/}
         <View style={styles.View3}>
-          <FlatList
-            data={this.state.Data}
-            renderItem={({ item }) => (
-              <ProductCart id={item.id} ProductName={item.ProductName} ProductPrice={item.Price} />
-            )}
-            keyExtractor={item => item.id.toString()}
-          />
+          {this.state.change ? (
+            <ProductCart
+              Product_id={object.product_Id}
+              ProductName={object.product_Name}
+              ProductSellingPrice={object.selling_Price}
+              ProductSerialNumber={object.serial_Number}
+              Quantity={object.Quantity}
+            />
+          ) : null}
+          {this.state.change === true && object.Quantity === 0 ? (
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(0, 177, 106, 0.4)"
+              }}
+            >
+              <TextInput
+                style={{
+                  marginLeft: 15,
+                  width: wp("30%"),
+                  height: hp("5%"),
+                  fontSize: 16,
+                  color: "black",
+                  backgroundColor: "white",
+                  textAlign: "center"
+                }}
+                placeholder="Enter Quantity"
+                value={this.state.value}
+                onChangeText={value => {
+                  this.setState({ value });
+                }}
+              />
+            </View>
+          ) : null}
+          <View style={{ justifyContent: "center", alignItems: "center" }}>
+            <Button
+              title="calculate Total"
+              onPress={() => {
+                const value = object.selling_Price * this.state.value * 0.07;
+                Alert.alert(
+                  "Total Price",
+                  "Your Final Price After adding 7% tax  value " +
+                    0.07 +
+                    "and Quantity " +
+                    this.state.value +
+                    "selling Price " +
+                    object.selling_Price +
+                    "FinalValue:= " +
+                    Math.round(value) +
+                    "&"
+                );
+              }}
+            />
+          </View>
         </View>
 
         <View style={styles.View4}>
@@ -109,7 +161,46 @@ class ThirdPage extends Component {
         </View>
         <View
           style={styles.View5}
-          onTouchStart={() => this.props.navigation.navigate("SecondPage")}
+          onTouchEnd={() => {
+            setTimeout(() => {
+              this.setState({ change: false });
+            }, 3000);
+            /* const Name = userName;
+              const Password = userPassword;
+              const token = Name + ":" + Password;
+              const DataToken = base64.encode(token);
+
+              const header = new Headers();
+              //Please keep in mind we have to provide some space in Basic like "Basic "
+              header.set("Authorization", "Basic " + DataToken);
+              const session_url = "http://ssmt.vivostore.com.sg/api/cashsale";
+              fetch(session_url, {
+                method: "POST",
+                body: JSON.stringify({
+                  product_Id: object.product_Id.toString(),
+                  quantity: this.state.value,
+                  SellingPrice: object.selling_Price.toString()
+                }),
+                headers: {
+                  DataToken,
+                  Accept: "application/json",
+                  "Content-Type": "application/json"
+                },
+                credentials: "same-origin"
+                //headers: header
+              })
+                .then(response => response.json())
+                .then(responseOk => {
+                  console.log(responseOk);
+                })
+                .catch(error => console.log("I'm error" + error.message));
+            }, 3000);
+            */
+            (this.state.change === true && object.Quantity === 0) ||
+            (this.state.change === true && object.Quantity === 1)
+              ? alert("Your Data is being uploading.. Thanks!")
+              : null;
+          }}
         >
           <Image
             source={Images.charge}
